@@ -6,6 +6,9 @@ import Container from 'react-bootstrap/Container';
 import Button from 'react-bootstrap/Button';
 import Alert from 'react-bootstrap/Alert';
 import Modal from 'react-bootstrap/Modal';
+import Dropdown from 'react-bootstrap/Dropdown';
+import DropdownButton from 'react-bootstrap/DropdownButton';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
 
 import anime from 'animejs';
 
@@ -60,12 +63,13 @@ export default class DSeparation extends Component {
 			d3.select('.circles')
 				.selectAll('circle')
 				.style("stroke", "none");
-			d3.select("circle:nth-child("+parseInt(x.name)+")").style("stroke", "black").style('stroke-width',"3");
 			var that = x['ref'];
 			for(var i=0;i<that.n;i++){
 				that.nodes[i]['highlight']=false;
 			}
 			that.nodes[parseInt(x.name)-1]['highlight']=true;
+			d3.select("circle:nth-child("+parseInt(x.name)+")").style("stroke", "black").style('stroke-width',"3");
+			that.animate();
 		}
 		function ticked(){
 			var u = d3.select('.links')
@@ -320,6 +324,19 @@ export default class DSeparation extends Component {
 	closeAnswer = ()=>{
 		this.setState({answer:false});
 	}
+	
+	example1 = ()=>{
+		if(this.state.attempt)return;
+		this.setState({error:false});
+		this.n=4;
+		this.nodes=[{"name": "1","highlight":false,"state":1},
+				{"name": "2","highlight":false,"state":2},
+				{"name": "3","highlight":false,"state":0},
+				{"name": "4","highlight":false,"state":3}];
+		this.links = [{source:0,target:2},
+						{source:1, target:2},
+						{source:2, target:3}];
+	}
    
    render = () => {
 	var alert;
@@ -359,6 +376,7 @@ export default class DSeparation extends Component {
 				    <g className="nodes"></g>
 				  </svg>
 				  <br/>
+				  <ButtonGroup>
 		      	<Button onClick={ this.addNode }>Add Node</Button>
 		        <Button onClick={ this.addEdge }>Add Edge</Button>
 		        <Button onClick={ this.clearGraph }>Clear Graph</Button>{'  '}
@@ -368,6 +386,12 @@ export default class DSeparation extends Component {
 		        <Button onClick={ this.clearNode } variant="secondary">Clear Node</Button>{'  '}
 		        <Button onClick={ this.randomQuery } variant="info">Random Query</Button>{'  '}
 		        <Button onClick={ this.attemp } variant="dark">Attempt</Button>{'  '}
+		        <DropdownButton variant="dark" title="Examples">
+				  <Dropdown.Item onClick={this.example1}>Example1</Dropdown.Item>
+				  <Dropdown.Item onClick={this.example2}>Example2</Dropdown.Item>
+				  <Dropdown.Item onClick={this.example3}>Example3</Dropdown.Item>
+				</DropdownButton>
+				</ButtonGroup>
 				{alert}
 				{attempt}
 				 <Modal show={this.state.answer} onHide={this.closeAnswer}>
