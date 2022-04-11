@@ -45,7 +45,7 @@ export default class DSeparation extends Component {
 		}
 		var _links = []
 		for(var i=0;i<this.links.length;i++){
-			_links.push({source:_nodes[this.links[i].source],target:_nodes[this.links[i].target]})
+			_links.push({source:_nodes[this.links[i].source],target:_nodes[this.links[i].target],shade:this.links[i].shade})
 			_nodes[this.links[i].source]['hasLink'] = true;
 			_nodes[this.links[i].target]['hasLink'] = true;
 		}
@@ -59,6 +59,7 @@ export default class DSeparation extends Component {
 		var ar = this.copy();
 		var _nodes = ar[0]; 
 		var _links = ar[1];
+		console.log(_links);
 		function adjust(x){
 			d3.select('.circles')
 				.selectAll('circle')
@@ -68,6 +69,9 @@ export default class DSeparation extends Component {
 				that.nodes[i]['highlight']=false;
 			}
 			that.nodes[parseInt(x.name)-1]['highlight']=true;
+			that.nodes[parseInt(x.name)-1]['state']+=1;
+			if(that.nodes[parseInt(x.name)-1]['state']>3)
+				that.nodes[parseInt(x.name)-1]['state']=0;
 			d3.select("circle:nth-child("+parseInt(x.name)+")").style("stroke", "black").style('stroke-width',"3");
 			that.animate();
 		}
@@ -89,7 +93,14 @@ export default class DSeparation extends Component {
 					return d.target.y
 				})
 				.attr('stroke-width', 5)
-				.attr('marker-end','url(#arrow)');
+				.attr('marker-end',function(d){
+					if(d.shade) return 'url(#arrow2)';
+					else return 'url(#arrow)';
+				})
+				.style("stroke", function(d){
+					if(d.shade)return '#000';
+					else return '#aaa';
+				});
 					var u = d3.select('.nodes')
 					.selectAll('text')
 					.data(_nodes)
@@ -119,7 +130,7 @@ export default class DSeparation extends Component {
 					return d.y
 				})
 				.style('stroke-width',"3")
-				.style("stroke", function(d){return d['highlight']?"black":"none"})
+				.style("stroke", function(d){return d['highlight']?"none":"none"})
 				.style("fill", function(d){
 					switch (d['state']) {
 					  case 0:
@@ -158,7 +169,18 @@ export default class DSeparation extends Component {
 		    .attr("orient", "auto")
 		  .append("svg:path")
 		    .attr("d", "M0,-5L10,0L0,5")
-		    .attr("fill","#ccc");
+		    .attr("fill","#aaa");
+		  d3.select('svg').append("defs").append("marker")
+		    .attr("id", "arrow2")
+		    .attr("viewBox", "0 -5 10 10")
+		    .attr("refX", 15)
+		    .attr("refY", 0)
+		    .attr("markerWidth", 4)
+		    .attr("markerHeight", 4)
+		    .attr("orient", "auto")
+		  .append("svg:path")
+		    .attr("d", "M0,-5L10,0L0,5")
+		    .attr("fill","#000");
 			this.animate();
 		   }
    componentDidUpdate=()=>{
@@ -166,9 +188,15 @@ export default class DSeparation extends Component {
 
 	}
    
+   clearEdge=()=>{
+		for(var i=0;i<this.links.length;i++)
+			this.links[i].shade=false;
+	}
+   
    addNode=()=>{
 		if(this.state.attempt)return;
-	this.setState({error:false});
+		this.setState({error:false});
+		this.clearEdge();
 		if(this.n>=10)return;
 		this.n++;
 		this.nodes.push({"name":this.n.toString(),"highlight":false,"state":0});
@@ -184,6 +212,7 @@ export default class DSeparation extends Component {
    addEdge=()=>{
 	if(this.state.attempt)return;
 	this.setState({error:false});
+	this.clearEdge();
 		if(this.links.length >= this.n*(this.n-1)/2) return;
 		function getRandomInt(max) {
 		  return Math.floor(Math.random() * max);
@@ -195,7 +224,7 @@ export default class DSeparation extends Component {
 			l = getRandomInt(this.n);
 			r = getRandomInt(this.n);
 		}
-		this.links.push({source: l, target: r});
+		this.links.push({source: l, target: r, shade:false});
 		this.animate();
 
 	}
@@ -203,6 +232,7 @@ export default class DSeparation extends Component {
 	   clearGraph=()=>{
 		if(this.state.attempt)return;
 		this.setState({error:false});
+		this.clearEdge();
 			  this.nodes = [
 		                {"name": "1","highlight":false,"state":0},
 		  ]
@@ -218,6 +248,7 @@ export default class DSeparation extends Component {
    setX=()=>{
 	if(this.state.attempt)return;
 	this.setState({error:false});
+	this.clearEdge();
 		for(var i=0;i<this.n;i++){
 			console.log(this.nodes[i]["highlight"]);
 						if(this.nodes[i]["highlight"])this.nodes[i]['state']=1;
@@ -229,6 +260,7 @@ export default class DSeparation extends Component {
 	   setY=()=>{
 		if(this.state.attempt)return;
 		this.setState({error:false});
+		this.clearEdge();
 		for(var i=0;i<this.n;i++)
 			if(this.nodes[i]["highlight"])this.nodes[i]['state']=2;
 		this.animate();
@@ -237,6 +269,7 @@ export default class DSeparation extends Component {
 	   setZ=()=>{
 		if(this.state.attempt)return;
 		this.setState({error:false});
+		this.clearEdge();
 		for(var i=0;i<this.n;i++)
 			if(this.nodes[i]["highlight"])this.nodes[i]['state']=3;
 		this.animate();
@@ -245,8 +278,9 @@ export default class DSeparation extends Component {
 	   clearNode=()=>{
 		if(this.state.attempt)return;
 		this.setState({error:false});
+		this.clearEdge();
 		for(var i=0;i<this.n;i++)
-			if(this.nodes[i]["highlight"])this.nodes[i]['state']=0;
+			this.nodes[i]['state']=0;
 		this.animate();
 	}
 	
@@ -282,6 +316,7 @@ export default class DSeparation extends Component {
 	
 	closeAlert =() =>{
 		this.setState({error:false});
+		this.clearEdge();
 	}
 	
 	randomQuery = ()=>{
@@ -292,6 +327,7 @@ export default class DSeparation extends Component {
 		}
 		
 		this.setState({error:false});
+		this.clearEdge();
 		function getRandomInt(max) {
 		  return Math.floor(Math.random() * max);
 		}
@@ -312,13 +348,106 @@ export default class DSeparation extends Component {
 	}
 	
 	answerYes = ()=>{
-		this.setState({attempt:false,answer:true,answer_title:"Congratulations!",answer_content:"You are correct!"});
+		var x=[],y=[],z=[];
+		for(var i=0;i<this.n;i++){
+			switch (this.nodes[i]['state']) {
+			  case 1:
+			  	x.push(i+1);
+			  	break;
+			  case 2:
+			  	y.push(i+1);
+			  	break;
+			  case 3:
+			  	z.push(i+1);
+			  	break;
+			  default:
+			}
+		}
+		var settings = {
+			'x':x,
+			'y':y,
+			'z':z,
+			'n':this.n,
+			'links':this.links
+		}
+		  try {
+		    fetch(
+		      	'http://172.27.119.122:8081/',{
+					method: 'GET',
+					headers: {
+					    Accept: 'application/json',
+					    'Content-Type': 'application/json',
+					    'content': JSON.stringify(settings),
+					},
+				}
+		    ).then(response => { return response.json();})
+		    .then(responseData => {console.log(responseData); return responseData;})
+		    .then(data=>{
+				data = {'independent':true};
+				if(data['independent']){
+					this.setState({attempt:false,answer:true,answer_title:"Congratulations!",answer_content:"You are correct!"});
+				}else{
+					this.setState({attempt:false,answer:true,answer_title:"Sorry!",answer_content:"The answer is different! The unblocked paths are shown in the graph."});
+					for(var i=0;i<this.links.length;i++){
+						this.links[i].shade=true;
+					}
+				}
+			});
+		  } catch (error) {
+		  	console.error(error);
+		  }
 		
 	}
 	
 	answerNo = ()=>{
-		this.setState({attempt:false,answer:true,answer_title:"Congratulations!",answer_content:"You are correct!"});
-		
+		var x=[],y=[],z=[];
+		for(var i=0;i<this.n;i++){
+			switch (this.nodes[i]['state']) {
+			  case 1:
+			  	x.push(i+1);
+			  	break;
+			  case 2:
+			  	y.push(i+1);
+			  	break;
+			  case 3:
+			  	z.push(i+1);
+			  	break;
+			  default:
+			}
+		}
+		var settings = {
+			'x':x,
+			'y':y,
+			'z':z,
+			'n':this.n,
+			'links':this.links
+		}
+		  try {
+		    fetch(
+		      	'http://172.27.119.122:8081/',{
+					method: 'GET',
+					headers: {
+					    Accept: 'application/json',
+					    'Content-Type': 'application/json',
+					    'content': JSON.stringify(settings),
+					},
+				}
+		    ).then(response => { return response.json();})
+		    .then(responseData => {console.log(responseData); return responseData;})
+		    .then(data=>{
+				data = {'independent':false};
+				if(!data['independent']){
+					for(var i=0;i<this.links.length;i++){
+						this.links[i].shade=true;
+					}
+					this.setState({attempt:false,answer:true,answer_title:"Congratulations!",answer_content:"You are correct! The unblocked paths are shown in the graph."});
+				}else{
+					this.setState({attempt:false,answer:true,answer_title:"Sorry!",answer_content:"The answer is different!"});
+				}
+			});
+		  } catch (error) {
+		  	console.error(error);
+		  }		
 	}
 	
 	closeAnswer = ()=>{
@@ -328,6 +457,7 @@ export default class DSeparation extends Component {
 	example1 = ()=>{
 		if(this.state.attempt)return;
 		this.setState({error:false});
+		this.clearEdge();
 		this.n=4;
 		this.nodes=[{"name": "1","highlight":false,"state":1},
 				{"name": "2","highlight":false,"state":2},
@@ -367,9 +497,18 @@ export default class DSeparation extends Component {
 				</Modal.Dialog>;
 		}
 		else attempt = null;
+		var tmp=<><Button onClick={ this.setX } variant="success">Set X</Button>
+		        <Button onClick={ this.setY } variant="danger">Set Y</Button>
+		        <Button onClick={ this.setZ } variant="warning">Set Z</Button></>;
     	return (
 	        <Container className="p-3">
-	        <center>
+	        <center>      <h3 className="header">D separation</h3>
+
+	              <p><b>Background:</b> Given a Bayesian network, D-separation is an criterion that decides whether a set X of variables is independent of another set Y, given a third set Z.</p>
+	              <p><b>Demonstration:</b> Below is a small tool to test your understanding of D-separation. You can generate a random graph by clicking the buttons and set queries by clicking on the nodes. 
+	              The color of the nodes implies the query: given the <mark className="yellow">yellow</mark> nodes, are the <mark className="red">red</mark> nodes and the <mark className="green">green</mark> nodes conditionally independent? You can answer the query first and we will compare with the ground truth for you. 
+	              You can also try some existing examples.</p>
+
 	        	<svg width={this.window_w} height={this.window_h}>
 				      <g className="links"></g>
 				          <g className="circles"></g>
@@ -379,19 +518,18 @@ export default class DSeparation extends Component {
 				  <ButtonGroup>
 		      	<Button onClick={ this.addNode }>Add Node</Button>
 		        <Button onClick={ this.addEdge }>Add Edge</Button>
-		        <Button onClick={ this.clearGraph }>Clear Graph</Button>{'  '}
-		        <Button onClick={ this.setX } variant="success">Set X</Button>
-		        <Button onClick={ this.setY } variant="danger">Set Y</Button>
-		        <Button onClick={ this.setZ } variant="warning">Set Z</Button>
+		        <Button onClick={ this.clearGraph } variant="secondary">Clear Graph</Button>{'  '}
+		        
 		        <Button onClick={ this.clearNode } variant="secondary">Clear Node</Button>{'  '}
 		        <Button onClick={ this.randomQuery } variant="info">Random Query</Button>{'  '}
-		        <Button onClick={ this.attemp } variant="dark">Attempt</Button>{'  '}
-		        <DropdownButton variant="dark" title="Examples">
+		        <DropdownButton variant="info" title="Examples">
 				  <Dropdown.Item onClick={this.example1}>Example1</Dropdown.Item>
 				  <Dropdown.Item onClick={this.example2}>Example2</Dropdown.Item>
 				  <Dropdown.Item onClick={this.example3}>Example3</Dropdown.Item>
 				</DropdownButton>
+			<Button onClick={ this.attemp } variant="dark">Attempt</Button>{'  '}
 				</ButtonGroup>
+		
 				{alert}
 				{attempt}
 				 <Modal show={this.state.answer} onHide={this.closeAnswer}>

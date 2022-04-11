@@ -20,3 +20,18 @@ text {
   fill: black;
   font-size: 16px;
 }
+
+mark.red {
+    color:#ff0000;
+    background: none;
+}
+
+mark.yellow {
+    color:#F1C40F;
+    background: none;
+}
+
+mark.green {
+    color:green;
+    background: none;
+}
