@@ -322,7 +322,7 @@ export default class DSeparation extends Component {
 		}
 		else{
 			this.clearEdge();
-			var z_string = z.length>0?'Given '+z+', is ':'Is ';
+			var z_string = z.length>0?'Given {'+z+'}, are ':'Are ';
 			this.setState({error:false,attempt:true,query:z_string+x+' and '+y+' (conditionally) independent?'});
 			
 		}
@@ -623,11 +623,11 @@ export default class DSeparation extends Component {
 	        <center>      <h3 className="header">D separation</h3>
 
 	              <p><b>Background:</b> Given a Bayesian network, D-separation is an criterion that decides whether a set X of variables is independent of another set Y, given a third set Z.</p>
-	              <p><b>Demonstration:</b> Below is a small tool to test your understanding of D-separation. You can generate a random graph by clicking the buttons and set queries by clicking on the nodes. 
+	              <p><b>Demonstration:</b> Below is a small tool to test your understanding of D-separation. You can generate a graph by clicking on the buttons and set queries by clicking on the nodes. 
 	              The color of the nodes implies the query: given the <mark className="yellow">yellow</mark> nodes, are the <mark className="red">red</mark> nodes and the <mark className="green">green</mark> nodes conditionally independent? You can answer the query first and we will compare with the ground truth for you. 
 	              You can also try some existing examples.</p>
 	              
-	              <p><b>Tips of adding edges:</b> It is tricky to generate a directed acylical graph (DAG), so we assume that the label of target node is higher than that of the source node for any edge.
+	              <p><b>Tips of adding edges:</b> It is tricky to generate a directed acyclic graph (DAG), so we assume that the label of target node is higher than that of the source node for any edge.
 	              You can add an edge by filling the forms (the first is source and the second is target) below and clicking 'Add Edge'. If the numbers are both 0, a random edge will be added.
 	              </p>
 
