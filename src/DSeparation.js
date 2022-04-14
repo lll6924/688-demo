@@ -393,7 +393,7 @@ export default class DSeparation extends Component {
 		}
 		  try {
 		    fetch(
-		      	'http://127.0.0.1:8081/',{
+		      	'http://3.98.151.11:8081/',{
 					method: 'GET',
 					headers: {
 					    Accept: 'application/json',
@@ -470,7 +470,7 @@ export default class DSeparation extends Component {
 		}
 		  try {
 		    fetch(
-		      	'http://127.0.0.1:8081/',{
+		      	'http://3.98.151.11:8081/',{
 					method: 'GET',
 					headers: {
 					    Accept: 'application/json',
