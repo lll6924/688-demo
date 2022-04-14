@@ -65,10 +65,6 @@ export default class DSeparation extends Component {
 				.selectAll('circle')
 				.style("stroke", "none");
 			var that = x['ref'];
-			for(var i=0;i<that.n;i++){
-				that.nodes[i]['highlight']=false;
-			}
-			that.nodes[parseInt(x.name)-1]['highlight']=true;
 			that.nodes[parseInt(x.name)-1]['state']+=1;
 			if(that.nodes[parseInt(x.name)-1]['state']>3)
 				that.nodes[parseInt(x.name)-1]['state']=0;
@@ -98,7 +94,7 @@ export default class DSeparation extends Component {
 					else return 'url(#arrow)';
 				})
 				.style("stroke", function(d){
-					if(d.shade)return '#000';
+					if(d.shade)return '#111';
 					else return '#aaa';
 				});
 					var u = d3.select('.nodes')
@@ -130,7 +126,7 @@ export default class DSeparation extends Component {
 					return d.y
 				})
 				.style('stroke-width',"3")
-				.style("stroke", function(d){return d['highlight']?"none":"none"})
+				.style("stroke", function(d){return d['highlight']?"#111":"none"})
 				.style("fill", function(d){
 					switch (d['state']) {
 					  case 0:
@@ -180,7 +176,7 @@ export default class DSeparation extends Component {
 		    .attr("orient", "auto")
 		  .append("svg:path")
 		    .attr("d", "M0,-5L10,0L0,5")
-		    .attr("fill","#000");
+		    .attr("fill","#111");
 			this.animate();
 		   }
    componentDidUpdate=()=>{
@@ -191,6 +187,9 @@ export default class DSeparation extends Component {
    clearEdge=()=>{
 		for(var i=0;i<this.links.length;i++)
 			this.links[i].shade=false;
+		for(var i=0;i<this.n;i++){
+			this.nodes[i]['highlight']=false;
+		}
 	}
    
    addNode=()=>{
@@ -250,7 +249,6 @@ export default class DSeparation extends Component {
 	this.setState({error:false});
 	this.clearEdge();
 		for(var i=0;i<this.n;i++){
-			console.log(this.nodes[i]["highlight"]);
 						if(this.nodes[i]["highlight"])this.nodes[i]['state']=1;
 
 		}
@@ -308,6 +306,7 @@ export default class DSeparation extends Component {
 			this.setState({error:true,alert_title:'Invalid setting',alert:'Empty y!'});
 		}
 		else{
+			this.clearEdge();
 			var z_string = z.length>0?'Given '+z+', is ':'Is ';
 			this.setState({error:false,attempt:true,query:z_string+x+' and '+y+' (conditoinally) independent?'});
 			
@@ -341,8 +340,8 @@ export default class DSeparation extends Component {
 		this.nodes[q1]['state']=1;
 		this.nodes[q2]['state']=2;
 		for(var i=0;i<this.n;i++)
-			if(Math.random()<0.5&&i!=q1&&i!=q2){
-				this.nodes[i]['state']=getRandomInt(4);
+			if(Math.random()<0.3&&i!=q1&&i!=q2){
+				this.nodes[i]['state']=3;
 			}
 		this.animate();
 	}
@@ -363,16 +362,23 @@ export default class DSeparation extends Component {
 			  default:
 			}
 		}
+		var thelinks = []
+		for(var i=0;i<this.links.length;i++){
+			var t = Object.assign({}, this.links[i]);
+			t['source']+=1;
+			t['target']+=1;
+			thelinks.push(t);
+		}
 		var settings = {
 			'x':x,
 			'y':y,
 			'z':z,
 			'n':this.n,
-			'links':this.links
+			'links':thelinks
 		}
 		  try {
 		    fetch(
-		      	'http://172.27.119.122:8081/',{
+		      	'http://3.98.151.11:8081/',{
 					method: 'GET',
 					headers: {
 					    Accept: 'application/json',
@@ -383,13 +389,31 @@ export default class DSeparation extends Component {
 		    ).then(response => { return response.json();})
 		    .then(responseData => {console.log(responseData); return responseData;})
 		    .then(data=>{
-				data = {'independent':true};
-				if(data['independent']){
+				if(data==null){
 					this.setState({attempt:false,answer:true,answer_title:"Congratulations!",answer_content:"You are correct!"});
 				}else{
-					this.setState({attempt:false,answer:true,answer_title:"Sorry!",answer_content:"The answer is different! The unblocked paths are shown in the graph."});
-					for(var i=0;i<this.links.length;i++){
-						this.links[i].shade=true;
+					this.setState({attempt:false,answer:true,answer_title:"Sorry!",answer_content:"The answer is different! The unblocked paths are shown dark in the graph. And the colliders (if any) are also marked dark."});
+					for(const [key, value] of Object.entries(data)){
+						if(key[0]=='p'){
+							var last = -1;
+							var ar = JSON.parse('['+value+']');
+							for(var i=0;i<ar.length;i++){
+								var now = ar[i]-1;
+								if(last!=-1){
+									for(var j=0;j<this.links.length;j++){
+										if(this.links[j]['source']==last&&this.links[j]['target']==now||this.links[j]['source']==now&&this.links[j]['target']==last){
+											this.links[j].shade=true;
+										}
+									}
+								}
+								last = now;
+							}
+						}else{
+							var ar = JSON.parse('['+value+']');
+							for(var i=0;i<ar.length;i++){
+								this.nodes[ar[i]-1]['highlight']=true;
+							}
+						}
 					}
 				}
 			});
@@ -415,16 +439,23 @@ export default class DSeparation extends Component {
 			  default:
 			}
 		}
+		var thelinks = []
+		for(var i=0;i<this.links.length;i++){
+			var t = Object.assign({}, this.links[i]);
+			t['source']+=1;
+			t['target']+=1;
+			thelinks.push(t);
+		}
 		var settings = {
 			'x':x,
 			'y':y,
 			'z':z,
 			'n':this.n,
-			'links':this.links
+			'links':thelinks
 		}
 		  try {
 		    fetch(
-		      	'http://172.27.119.122:8081/',{
+		      	'http://3.98.151.11:8081/',{
 					method: 'GET',
 					headers: {
 					    Accept: 'application/json',
@@ -435,12 +466,30 @@ export default class DSeparation extends Component {
 		    ).then(response => { return response.json();})
 		    .then(responseData => {console.log(responseData); return responseData;})
 		    .then(data=>{
-				data = {'independent':false};
-				if(!data['independent']){
-					for(var i=0;i<this.links.length;i++){
-						this.links[i].shade=true;
+				if(data!=null){
+					for(const [key, value] of Object.entries(data)){
+						if(key[0]=='p'){
+							var last = -1;
+							var ar = JSON.parse('['+value+']');
+							for(var i=0;i<ar.length;i++){
+								var now = ar[i]-1;
+								if(last!=-1){
+									for(var j=0;j<this.links.length;j++){
+										if(this.links[j]['source']==last&&this.links[j]['target']==now||this.links[j]['source']==now&&this.links[j]['target']==last){
+											this.links[j].shade=true;
+										}
+									}
+								}
+								last = now;
+							}
+						}else{
+							var ar = JSON.parse('['+value+']');
+							for(var i=0;i<ar.length;i++){
+								this.nodes[ar[i]-1]['highlight']=true;
+							}
+						}
 					}
-					this.setState({attempt:false,answer:true,answer_title:"Congratulations!",answer_content:"You are correct! The unblocked paths are shown in the graph."});
+					this.setState({attempt:false,answer:true,answer_title:"Congratulations!",answer_content:"You are correct! The unblocked paths are shown dark in the graph. And the colliders (if any) are also marked dark."});
 				}else{
 					this.setState({attempt:false,answer:true,answer_title:"Sorry!",answer_content:"The answer is different!"});
 				}
