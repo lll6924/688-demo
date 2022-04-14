@@ -9,10 +9,18 @@ import Modal from 'react-bootstrap/Modal';
 import Dropdown from 'react-bootstrap/Dropdown';
 import DropdownButton from 'react-bootstrap/DropdownButton';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import Form from 'react-bootstrap/Form';
+import Tooltip from 'react-bootstrap/Tooltip';
 
 import anime from 'animejs';
 
 import * as d3 from 'd3'
+
+const renderTooltip = (props) => (
+  <Tooltip id="button-tooltip" {...props}>
+    Simple tooltip
+  </Tooltip>
+);
 
 export default class DSeparation extends Component {
 	state = {
@@ -196,7 +204,7 @@ export default class DSeparation extends Component {
 		if(this.state.attempt)return;
 		this.setState({error:false});
 		this.clearEdge();
-		if(this.n>=10)return;
+		if(this.n>=8)return;
 		this.n++;
 		this.nodes.push({"name":this.n.toString(),"highlight":false,"state":0});
 		this.animate();
@@ -212,18 +220,25 @@ export default class DSeparation extends Component {
 	if(this.state.attempt)return;
 	this.setState({error:false});
 	this.clearEdge();
-		if(this.links.length >= this.n*(this.n-1)/2) return;
-		function getRandomInt(max) {
-		  return Math.floor(Math.random() * max);
-		}	
-
-		var l = getRandomInt(this.n);
-		var r = getRandomInt(this.n);
-		while(l>=r|| this.exists(l,r)){
-			l = getRandomInt(this.n);
-			r = getRandomInt(this.n);
+		if(this.links.length >= this.n*(this.n-1)/2 || this.links.length >= 16) return;
+		var source_value = document.getElementById("Source").value;
+		var target_value = document.getElementById("Target").value;
+		if(source_value==0&&target_value==0){
+			function getRandomInt(max) {
+			  return Math.floor(Math.random() * max);
+			}	
+	
+			var l = getRandomInt(this.n);
+			var r = getRandomInt(this.n);
+			while(l>=r|| this.exists(l,r)){
+				l = getRandomInt(this.n);
+				r = getRandomInt(this.n);
+			}
+			this.links.push({source: l, target: r, shade:false});
 		}
-		this.links.push({source: l, target: r, shade:false});
+		else if(0<source_value&&source_value<target_value&&target_value<=this.n){
+			this.links.push({source: source_value-1, target: target_value-1, shade:false});
+		}
 		this.animate();
 
 	}
@@ -308,7 +323,7 @@ export default class DSeparation extends Component {
 		else{
 			this.clearEdge();
 			var z_string = z.length>0?'Given '+z+', is ':'Is ';
-			this.setState({error:false,attempt:true,query:z_string+x+' and '+y+' (conditoinally) independent?'});
+			this.setState({error:false,attempt:true,query:z_string+x+' and '+y+' (conditionally) independent?'});
 			
 		}
 	}
@@ -378,7 +393,7 @@ export default class DSeparation extends Component {
 		}
 		  try {
 		    fetch(
-		      	'http://3.98.151.11:8081/',{
+		      	'http://127.0.0.1:8081/',{
 					method: 'GET',
 					headers: {
 					    Accept: 'application/json',
@@ -455,7 +470,7 @@ export default class DSeparation extends Component {
 		}
 		  try {
 		    fetch(
-		      	'http://3.98.151.11:8081/',{
+		      	'http://127.0.0.1:8081/',{
 					method: 'GET',
 					headers: {
 					    Accept: 'application/json',
@@ -516,6 +531,60 @@ export default class DSeparation extends Component {
 						{source:1, target:2},
 						{source:2, target:3}];
 	}
+	
+	example2 = ()=>{
+		if(this.state.attempt)return;
+		this.setState({error:false});
+		this.clearEdge();
+		this.n=6;
+		this.nodes=[{"name": "1","highlight":false,"state":1},
+				{"name": "2","highlight":false,"state":3},
+				{"name": "3","highlight":false,"state":3},
+				{"name": "4","highlight":false,"state":0},
+				{"name": "5","highlight":false,"state":0},
+				{"name": "6","highlight":false,"state":2}];
+		this.links = [{source:0,target:1},
+						{source:0, target:2},
+						{source:1, target:3},
+						{source:1, target:5},
+						{source:2, target:4},
+						{source:4, target:5}];
+	}
+	
+	example3 = ()=>{
+		if(this.state.attempt)return;
+		this.setState({error:false});
+		this.clearEdge();
+		this.n=9;
+		this.nodes=[{"name": "1","highlight":false,"state":1},
+				{"name": "2","highlight":false,"state":0},
+				{"name": "3","highlight":false,"state":3},
+				{"name": "4","highlight":false,"state":0},
+				{"name": "5","highlight":false,"state":0},
+				{"name": "6","highlight":false,"state":0},
+				{"name": "7","highlight":false,"state":2},
+				{"name": "8","highlight":false,"state":0},
+				{"name": "9","highlight":false,"state":2}];
+		this.links = [{source:0,target:2},
+						{source:0, target:3},
+						{source:1, target:2},
+						{source:1, target:3},
+						{source:2, target:4},
+						{source:3, target:4},
+						{source:4, target:5},
+						{source:4, target:6},
+						{source:4, target:7},
+						{source:4, target:8},
+						{source:3, target:8}];
+	}
+	
+	 numCheck = (object) => {
+			var value = object.target.value;
+		 if (value > this.n) {
+		  object.target.value = this.n;
+		   }
+		   if(value<0)object.target.value = 0;
+		 }
    
    render = () => {
 	var alert;
@@ -557,6 +626,10 @@ export default class DSeparation extends Component {
 	              <p><b>Demonstration:</b> Below is a small tool to test your understanding of D-separation. You can generate a random graph by clicking the buttons and set queries by clicking on the nodes. 
 	              The color of the nodes implies the query: given the <mark className="yellow">yellow</mark> nodes, are the <mark className="red">red</mark> nodes and the <mark className="green">green</mark> nodes conditionally independent? You can answer the query first and we will compare with the ground truth for you. 
 	              You can also try some existing examples.</p>
+	              
+	              <p><b>Tips of adding edges:</b> It is tricky to generate a directed acylical graph (DAG), so we assume that the label of target node is higher than that of the source node for any edge.
+	              You can add an edge by filling the forms (the first is source and the second is target) below and clicking 'Add Edge'. If the numbers are both 0, a random edge will be added.
+	              </p>
 
 	        	<svg width={this.window_w} height={this.window_h}>
 				      <g className="links"></g>
@@ -566,6 +639,23 @@ export default class DSeparation extends Component {
 				  <br/>
 				  <ButtonGroup>
 		      	<Button onClick={ this.addNode }>Add Node</Button>
+		      			  		<Form.Control
+				    type="number"
+				    id="Source"
+				    style={{ width: "4rem" }}
+				    maxLength = "1"
+				    onInput={this.numCheck}
+				    defaultValue='0'
+				  />
+		      			  		<Form.Control
+				    type="number"
+				    id="Target"
+				    style={{ width: "4rem" }}
+				    maxLength = "1"
+				    onInput={this.numCheck}
+				    defaultValue='0'
+				  />
+				  
 		        <Button onClick={ this.addEdge }>Add Edge</Button>
 		        <Button onClick={ this.clearGraph } variant="secondary">Clear Graph</Button>{'  '}
 		        
@@ -578,7 +668,7 @@ export default class DSeparation extends Component {
 				</DropdownButton>
 			<Button onClick={ this.attemp } variant="dark">Attempt</Button>{'  '}
 				</ButtonGroup>
-		
+
 				{alert}
 				{attempt}
 				 <Modal show={this.state.answer} onHide={this.closeAnswer}>
